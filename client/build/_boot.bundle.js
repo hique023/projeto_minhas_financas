@@ -93,9 +93,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _controller_FinancaController__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 
 var financaController = new _controller_FinancaController__WEBPACK_IMPORTED_MODULE_0__["FinancaController"]();
-document.querySelector('form').onsubmit = financaController.adiciona.bind(financaController);
-document.querySelector('#btn-import').onclick = financaController.importaFinancas.bind(financaController);
-document.querySelector('#btn-apaga').onclick = financaController.apaga.bind(financaController);
+document.querySelector("form").onsubmit = financaController.adiciona.bind(financaController);
+document.querySelector("#btn-import").onclick = financaController.importaFinancas.bind(financaController);
+document.querySelector("#btn-apaga").onclick = financaController.apaga.bind(financaController);
+document.querySelector("#btn-filtro").onclick = financaController.filtra.bind(financaController);
+document.querySelector("#btn-limpa").onclick = financaController.limpar.bind(financaController);
 
 /***/ }),
 /* 1 */
@@ -133,8 +135,9 @@ var FinancaController = /*#__PURE__*/function () {
     this._inputData = $("#data");
     this._inputQuantidade = $("#quantidade");
     this._inputValor = $("#valor");
+    this._inputFiltro = $("#filtro");
     this._listaFinancas = new _models_ListaFinancas__WEBPACK_IMPORTED_MODULE_2__["ListaFinancas"]();
-    this._financasView = new _views_FinancasView__WEBPACK_IMPORTED_MODULE_5__["FinancasView"]($("#financasView"));
+    this._financasView = new _views_FinancasView__WEBPACK_IMPORTED_MODULE_5__["FinancasView"]($("#financasView"), this);
 
     this._financasView.update(this._listaFinancas);
 
@@ -142,6 +145,9 @@ var FinancaController = /*#__PURE__*/function () {
     this._notificacaoView = new _views_NotificacaoView__WEBPACK_IMPORTED_MODULE_4__["NotificacaoView"]($("#notificacaoView"));
 
     this._notificacaoView.update(this._notificacao);
+
+    this._ordemColuna = "";
+    this._ordemAtual = "";
   }
 
   _createClass(FinancaController, [{
@@ -201,6 +207,54 @@ var FinancaController = /*#__PURE__*/function () {
         return;
       });
     }
+  }, {
+    key: "ordena",
+    value: function ordena(coluna) {
+      if (coluna === 'item') this._listaFinancas.ordena(function (a, b) {
+        return a[coluna].localeCompare(b[coluna]);
+      });else this._listaFinancas.ordena(function (a, b) {
+        return a[coluna] - b[coluna];
+      });
+
+      if (coluna === this._ordemAtual) {
+        this._listaFinancas.reverse();
+
+        this._ordemAtual = "";
+      } else {
+        this._ordemAtual = coluna;
+      }
+
+      this._ordemColuna = coluna;
+
+      this._financasView.update(this._listaFinancas);
+    }
+  }, {
+    key: "filtra",
+    value: function filtra() {
+      if (this._inputFiltro.value === "") {
+        this._financasView.update(this._listaFinancas);
+      } else {
+        var listaFiltrada = new _models_ListaFinancas__WEBPACK_IMPORTED_MODULE_2__["ListaFinancas"]();
+        listaFiltrada._financas = this._listaFinancas.filtra(_helpers_DateHelper__WEBPACK_IMPORTED_MODULE_0__["DateHelper"].textoParaData(this._inputFiltro.value));
+
+        this._financasView.update(listaFiltrada);
+      }
+    }
+  }, {
+    key: "limpar",
+    value: function limpar() {
+      this._financasView.update(this._listaFinancas);
+    }
+  }, {
+    key: "coluna",
+    get: function get() {
+      return this._ordemColuna;
+    }
+  }, {
+    key: "ordem",
+    get: function get() {
+      return this._ordemAtual;
+    }
   }]);
 
   return FinancaController;
@@ -223,7 +277,7 @@ function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableTo
 
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(n); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 
 function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter); }
 
@@ -346,6 +400,23 @@ var ListaFinancas = /*#__PURE__*/function () {
       this._financas = [];
     }
   }, {
+    key: "ordena",
+    value: function ordena(criterio) {
+      this._financas.sort(criterio);
+    }
+  }, {
+    key: "reverse",
+    value: function reverse() {
+      this._financas.reverse();
+    }
+  }, {
+    key: "filtra",
+    value: function filtra(dataFiltrada) {
+      return this._financas.filter(function (financa) {
+        return financa._data.setHours(0, 0, 0, 0).valueOf() === dataFiltrada.valueOf();
+      });
+    }
+  }, {
     key: "financas",
     get: function get() {
       return [].concat(this._financas);
@@ -410,7 +481,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 
-function _createSuper(Derived) { return function () { var Super = _getPrototypeOf(Derived), result; if (_isNativeReflectConstruct()) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
 function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
 
@@ -494,11 +565,15 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
+function _get(target, property, receiver) { if (typeof Reflect !== "undefined" && Reflect.get) { _get = Reflect.get; } else { _get = function _get(target, property, receiver) { var base = _superPropBase(target, property); if (!base) return; var desc = Object.getOwnPropertyDescriptor(base, property); if (desc.get) { return desc.get.call(receiver); } return desc.value; }; } return _get(target, property, receiver || target); }
+
+function _superPropBase(object, property) { while (!Object.prototype.hasOwnProperty.call(object, property)) { object = _getPrototypeOf(object); if (object === null) break; } return object; }
+
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
 
 function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 
-function _createSuper(Derived) { return function () { var Super = _getPrototypeOf(Derived), result; if (_isNativeReflectConstruct()) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
 function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
 
@@ -515,20 +590,37 @@ var FinancasView = /*#__PURE__*/function (_View) {
 
   var _super = _createSuper(FinancasView);
 
-  function FinancasView(elemento) {
+  function FinancasView(elemento, controller) {
+    var _this;
+
     _classCallCheck(this, FinancasView);
 
-    return _super.call(this, elemento);
+    _this = _super.call(this, elemento);
+    _this._controller = controller;
+    return _this;
   }
 
   _createClass(FinancasView, [{
     key: "template",
     value: function template(model) {
-      return "<table class=\"table\">\n        <thead>\n          <tr>\n            <th scope=\"col\">Item</th>\n            <th scope=\"col\">Data</th>\n            <th scope=\"col\">#</th>\n            <th scope=\"col\">$</th>\n            <th scope=\"col\">=</th>\n          </tr>\n        </thead>\n        <tbody>\n            ".concat(model.financas.map(function (financa) {
+      return "<table class=\"table\">\n        <thead>\n          <tr>\n            <th data-col=\"item\" scope=\"col\">Item ".concat(this._controller.coluna === 'item' ? this._controller.ordem === 'item' ? '🔻' : '🔺' : '', "</th>\n            <th data-col=\"data\" scope=\"col\">Data ").concat(this._controller.coluna === 'data' ? this._controller.ordem === 'data' ? '🔻' : '🔺' : '', "</th>\n    <th data-col=\"quantidade\" scope=\"col\"># ").concat(this._controller.coluna === 'quantidade' ? this._controller.ordem === 'quantidade' ? '🔻' : '🔺' : '', "</th>\n    <th data-col=\"valor\" scope=\"col\">$ ").concat(this._controller.coluna === 'valor' ? this._controller.ordem === 'valor' ? '🔻' : '🔺' : '', "</th>\n    <th scope=\"col\">=</th>\n          </tr>\n        </thead>\n  <tbody>\n    ").concat(model.financas.map(function (financa) {
         return "<tr>\n                    <td>".concat(financa.item, "</td>\n                    <td>").concat(_helpers_DateHelper__WEBPACK_IMPORTED_MODULE_1__["DateHelper"].dataParaTexto(financa.data), "</td>\n                    <td>").concat(financa.quantidade, "</td>\n                    <td>").concat(financa.valor, "</td>\n                    <td>").concat(financa.total, "</td>\n                  </tr>");
-      }).join(""), "\n        </tbody>\n        <tfoot>\n          <tr>\n            <td colspan=\"4\"></td>\n            <td>").concat(model.financas.reduce(function (acc, financa) {
+      }).join(""), "\n  </tbody>\n  <tfoot>\n    <tr>\n      <td colspan=\"4\"></td>\n      <td>").concat(model.financas.reduce(function (acc, financa) {
         return acc + financa.total;
-      }, 0.0), "</td>\n          </tr>\n        </tfoot>\n      </table>");
+      }, 0.0), "</td>\n    </tr>\n  </tfoot>\n      </table> ");
+    }
+  }, {
+    key: "update",
+    value: function update(modelo) {
+      var _this2 = this;
+
+      _get(_getPrototypeOf(FinancasView.prototype), "update", this).call(this, modelo);
+
+      document.querySelectorAll('[data-col]').forEach(function (col) {
+        return col.onclick = function () {
+          return _this2._controller.ordena(col.dataset.col);
+        };
+      });
     }
   }]);
 
